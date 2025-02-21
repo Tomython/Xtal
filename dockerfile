@@ -1,5 +1,5 @@
 # Этап сборки: собираем проект
-FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
+FROM mcr.microsoft.com/dotnet/sdk:6.0 AS build
 
 WORKDIR /app
 
@@ -12,8 +12,8 @@ RUN dotnet restore "XtalPlayer.csproj"
 # Публикуем проект
 RUN dotnet publish "XtalPlayer.csproj" -c Release -o out
 
-# Этап выполнения: используем .NET 8.0 Runtime
-FROM mcr.microsoft.com/dotnet/aspnet:8.0
+# Этап выполнения: используем .NET 6.0 Runtime
+FROM mcr.microsoft.com/dotnet/aspnet:6.0
 
 WORKDIR /app
 
