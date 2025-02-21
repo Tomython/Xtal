@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("XtalPlayer")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+187a7dc44758c3c8bf8787aee6ec8294941c68bd")]
 [assembly: System.Reflection.AssemblyProductAttribute("XtalPlayer")]
 [assembly: System.Reflection.AssemblyTitleAttribute("XtalPlayer")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
