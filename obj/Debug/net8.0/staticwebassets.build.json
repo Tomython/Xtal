@@ -1,0 +1,39 @@
+{
+  "Version": 1,
+  "Hash": "xa+kJrrjxy+tbpgJxdaDxyje9ilawTR0wN40YZTsIIw=",
+  "Source": "XtalPlayer",
+  "BasePath": "_content/XtalPlayer",
+  "Mode": "Default",
+  "ManifestType": "Build",
+  "ReferencedProjectsConfiguration": [],
+  "DiscoveryPatterns": [
+    {
+      "Name": "XtalPlayer/wwwroot",
+      "Source": "XtalPlayer",
+      "ContentRoot": "/Users/tomython/Documents/Visual Studio Code Project/XtalPlayer/wwwroot/",
+      "BasePath": "_content/XtalPlayer",
+      "Pattern": "**"
+    }
+  ],
+  "Assets": [
+    {
+      "Identity": "/Users/tomython/Documents/Visual Studio Code Project/XtalPlayer/wwwroot/XtalHtml.html",
+      "SourceId": "XtalPlayer",
+      "SourceType": "Discovered",
+      "ContentRoot": "/Users/tomython/Documents/Visual Studio Code Project/XtalPlayer/wwwroot/",
+      "BasePath": "_content/XtalPlayer",
+      "RelativePath": "XtalHtml.html",
+      "AssetKind": "All",
+      "AssetMode": "All",
+      "AssetRole": "Primary",
+      "AssetMergeBehavior": "PreferTarget",
+      "AssetMergeSource": "",
+      "RelatedAsset": "",
+      "AssetTraitName": "",
+      "AssetTraitValue": "",
+      "CopyToOutputDirectory": "Never",
+      "CopyToPublishDirectory": "PreserveNewest",
+      "OriginalItemSpec": "wwwroot/XtalHtml.html"
+    }
+  ]
+}

@@ -1,0 +1,25 @@
+{
+  "Files": [
+    {
+      "Id": "/Users/tomython/Documents/Visual Studio Code Project/XtalPlayer/wwwroot/XtalHtml.html",
+      "PackagePath": "staticwebassets/XtalHtml.html"
+    },
+    {
+      "Id": "obj/Debug/net8.0/staticwebassets/msbuild.XtalPlayer.Microsoft.AspNetCore.StaticWebAssets.props",
+      "PackagePath": "build\\Microsoft.AspNetCore.StaticWebAssets.props"
+    },
+    {
+      "Id": "obj/Debug/net8.0/staticwebassets/msbuild.build.XtalPlayer.props",
+      "PackagePath": "build\\XtalPlayer.props"
+    },
+    {
+      "Id": "obj/Debug/net8.0/staticwebassets/msbuild.buildMultiTargeting.XtalPlayer.props",
+      "PackagePath": "buildMultiTargeting\\XtalPlayer.props"
+    },
+    {
+      "Id": "obj/Debug/net8.0/staticwebassets/msbuild.buildTransitive.XtalPlayer.props",
+      "PackagePath": "buildTransitive\\XtalPlayer.props"
+    }
+  ],
+  "ElementsToRemove": []
+}

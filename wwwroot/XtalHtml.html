@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title style="color: black;">Xtal</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            background: linear-gradient(135deg, #ffffff, #909090);
+            color: white;
+        }
+        #player-container {
+            background: #afafaf;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0px 0px 10px rgba(255, 255, 255, 0.2);
+            text-align: center;
+        }
+        button {
+            background: #4CAF50;
+            border: none;
+            color: white;
+            padding: 10px 20px;
+            margin: 10px;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+        button:hover {
+            background: #45a049;
+        }
+        input[type="range"] {
+            width: 100%;
+        }
+    </style>
+</head>
+<body>
+    <h1>Xtal</h1>
+    <input type="file" id="audioFileInput" accept="audio/*">
+    <div id="player-container">
+        <button id="playPause">Play</button>
+        <input type="range" id="seekBar" min="0" max="100" value="0">
+        <div id="timeDisplay">00:00 / 00:00</div>
+        <label>Speed: <input type="range" id="speedControl" min="0.5" max="1.5" step="0.01" value="1"></label>
+    </div>
+    <script>
+        const audioFileInput = document.getElementById('audioFileInput');
+        const playPauseButton = document.getElementById('playPause');
+        const seekBar = document.getElementById('seekBar');
+        const timeDisplay = document.getElementById('timeDisplay');
+        const speedControl = document.getElementById('speedControl');
+        
+        let audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        let sourceNode = null;
+        let audioBuffer = null;
+        let isPlaying = false;
+        let startTime = 0;
+        let pauseOffset = 0;
+        let duration = 0;
+
+        audioFileInput.addEventListener('change', async function(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const arrayBuffer = await file.arrayBuffer();
+                audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
+                duration = audioBuffer.duration;
+                seekBar.max = duration;
+                updateTimer(0);
+            }
+        });
+
+        function playAudio() {
+            if (sourceNode) {
+                sourceNode.stop();
+            }
+            sourceNode = audioContext.createBufferSource();
+            sourceNode.buffer = audioBuffer;
+            sourceNode.playbackRate.value = speedControl.value;
+            
+            const gainNode = audioContext.createGain();
+            sourceNode.connect(gainNode).connect(audioContext.destination);
+            
+            sourceNode.start(0, pauseOffset);
+            startTime = audioContext.currentTime - pauseOffset;
+            isPlaying = true;
+            playPauseButton.textContent = 'Pause';
+            requestAnimationFrame(updateSeekBar);
+        }
+
+        function pauseAudio() {
+            if (sourceNode) {
+                sourceNode.stop();
+                pauseOffset = audioContext.currentTime - startTime;
+                isPlaying = false;
+                playPauseButton.textContent = 'Play';
+            }
+        }
+
+        playPauseButton.addEventListener('click', function() {
+            if (isPlaying) {
+                pauseAudio();
+            } else {
+                playAudio();
+            }
+        });
+
+        function updateSeekBar() {
+            if (isPlaying) {
+                const currentTime = audioContext.currentTime - startTime;
+                seekBar.value = currentTime;
+                updateTimer(currentTime);
+                requestAnimationFrame(updateSeekBar);
+            }
+        }
+
+        function updateTimer(time) {
+            const minutes = Math.floor(time / 60);
+            const seconds = Math.floor(time % 60);
+            const totalMinutes = Math.floor(duration / 60);
+            const totalSeconds = Math.floor(duration % 60);
+            timeDisplay.textContent = `${minutes}:${seconds.toString().padStart(2, '0')} / ${totalMinutes}:${totalSeconds.toString().padStart(2, '0')}`;
+        }
+
+        seekBar.addEventListener('input', function() {
+            if (sourceNode) {
+                pauseOffset = parseFloat(seekBar.value);
+                if (isPlaying) {
+                    playAudio();
+                }
+                updateTimer(pauseOffset);
+            }
+        });
+
+        speedControl.addEventListener('input', function() {
+            if (sourceNode) {
+                sourceNode.playbackRate.value = speedControl.value;
+            }
+        });
+    </script>
+</body>
+</html>
