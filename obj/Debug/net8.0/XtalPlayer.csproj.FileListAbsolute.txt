@@ -25,3 +25,4 @@
 /Users/tomython/Documents/Visual Studio Code Project/XtalPlayer/obj/Debug/net8.0/XtalPlayer.genruntimeconfig.cache
 /Users/tomython/Documents/Visual Studio Code Project/XtalPlayer/obj/Debug/net8.0/ref/XtalPlayer.dll
 /Users/tomython/Documents/Visual Studio Code Project/XtalPlayer/obj/Debug/net8.0/XtalPlayer.sourcelink.json
+/Users/tomython/Documents/Visual Studio Code Project/XtalPlayer/bin/Debug/net8.0/railway.json

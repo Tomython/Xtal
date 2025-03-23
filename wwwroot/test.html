@@ -8,7 +8,7 @@
     <title>Xtal</title>
     <style>
         body {
-            font-family: Arial, Helvetica, sans-serif;
+            font-family: Arial, sans-serif;
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -16,6 +16,33 @@
             height: 100vh;
             background: linear-gradient(180deg, #000000, #101010);
             color: white;
+        }
+        
+        @keyframes gradientBorder {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+            
+        }
+
+        @keyframes glowing {
+            0% { box-shadow: 0 0 5px gray; }
+            50% { box-shadow: 0 0 10px white; }
+            100% { box-shadow: 0 0 5px gray; }
+        }
+
+        #coverArt {
+            border: 0px solid transparent;
+            background: linear-gradient(45deg, rgb(40, 40, 40), rgb(154, 154, 154), rgb(165, 165, 165), rgb(32, 32, 32));
+            background-size: 300% 300%;
+            background-clip: padding-box;
+            animation: gradientBorder 3s infinite alternate;
+            animation: glowing 2s infinite alternate;
+        }
+
+        #trackTitle {
+            font-family: Helvetica, sans-serif;
+            color: linear-gradient(180deg, gray, white);
         }
 
         #player-container {
@@ -40,33 +67,40 @@
         input[type="range"] {
             width: 100%;
         }
+        #coverArt {
+            width: 200px;
+            height: 200px;
+            object-fit: cover;
+            border-radius: 10px;
+            display: block;
+            margin: 10px auto;
+        }
     </style>
 </head>
 <body>
+    <!-- <img width="240px 120px" src="xtalgif.gif" alt="Logo"> -->
     <video autoplay loop muted width="240px 120px">
         <source src="blackxtalvideo.mp4" type="video/mp4">
-    </video>
-    <!-- <h1 style="color: black;">Xtal</h1> -->
+      </video>
+      
     <input type="file" id="audioFileInput" accept="audio/*">
+    <img id="coverArt" src="placeholder.jpg" alt="Обложка">
+    <div id="trackTitle" style="font-family: Arial, Helvetica, sans-serif; color: linear-gradient(180deg, gray, white)"><b>Track</b></div>
     <div id="player-container">
         <button id="playPause">Play</button>
         <input type="range" id="seekBar" min="0" max="100" value="0">
         <div id="timeDisplay">00:00 / 00:00</div>
         <label>Speed: <input type="range" id="speedControl" min="0.5" max="1.5" step="0.01" value="1"></label>
     </div>
-    <header>
-
-    </header>
-
-    <footer>
-
-    </footer>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jsmediatags/3.9.5/jsmediatags.min.js"></script>
     <script>
         const audioFileInput = document.getElementById('audioFileInput');
         const playPauseButton = document.getElementById('playPause');
         const seekBar = document.getElementById('seekBar');
         const timeDisplay = document.getElementById('timeDisplay');
         const speedControl = document.getElementById('speedControl');
+        const coverArt = document.getElementById('coverArt');
+        const trackTitle = document.getElementById('trackTitle');
         
         let audioContext = new (window.AudioContext || window.webkitAudioContext)();
         let sourceNode = null;
@@ -78,13 +112,30 @@
 
         audioFileInput.addEventListener('change', async function(event) {
             const file = event.target.files[0];
-            if (file) {
-                const arrayBuffer = await file.arrayBuffer();
-                audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
-                duration = audioBuffer.duration;
-                seekBar.max = duration;
-                updateTimer(0);
-            }
+            if (!file) return;
+            
+            const arrayBuffer = await file.arrayBuffer();
+            audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
+            duration = audioBuffer.duration;
+            seekBar.max = duration;
+            updateTimer(0);
+            
+            jsmediatags.read(file, {
+                onSuccess: function (tag) {
+                    trackTitle.textContent = tag.tags.title || file.name;
+                    if (tag.tags.picture) {
+                        let { data, format } = tag.tags.picture;
+                        let blob = new Blob([new Uint8Array(data)], { type: format });
+                        coverArt.src = URL.createObjectURL(blob);
+                    } else {
+                        coverArt.src = "placeholder.jpg";
+                    }
+                },
+                onError: function () {
+                    trackTitle.textContent = file.name;
+                    coverArt.src = "placeholder.jpg";
+                }
+            });
         });
 
         function playAudio() {
