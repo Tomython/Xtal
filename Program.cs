@@ -20,6 +20,8 @@ class Program
 
             string filePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "wwwroot", request.Url.LocalPath.TrimStart('/'));
 
+            Console.WriteLine($"Ищем файл: {filePath}"); // ← добавить перед проверкой File.Exists
+
             if (File.Exists(filePath))
             {
                 byte[] buffer = File.ReadAllBytes(filePath);
