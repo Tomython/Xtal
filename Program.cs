@@ -18,7 +18,7 @@ class Program
             HttpListenerRequest request = context.Request;
             HttpListenerResponse response = context.Response;
 
-            string filePath = Path.Combine("wwwroot", request.Url.LocalPath.TrimStart('/'));
+            string filePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "wwwroot", request.Url.LocalPath.TrimStart('/'));
 
             if (File.Exists(filePath))
             {
