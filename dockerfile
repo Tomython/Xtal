@@ -1,5 +1,6 @@
 # Этап сборки: собираем проект
 FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS base
+# пожалуйста сработай
 
 WORKDIR /src
 
