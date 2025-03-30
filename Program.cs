@@ -18,9 +18,24 @@ class Program
             HttpListenerRequest request = context.Request;
             HttpListenerResponse response = context.Response;
 
-            string filePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "wwwroot", request.Url.LocalPath.TrimStart('/'));
+            string requestedPath = request.Url.LocalPath.TrimStart('/');
+
+            // Если путь пустой, подставляем XtalHtml.html
+            if (string.IsNullOrEmpty(requestedPath)) 
+            {
+                requestedPath = "XtalHtml.html"; // ← Твой HTML-файл
+            }
+
+            string filePath = Path.Combine(
+                AppDomain.CurrentDomain.BaseDirectory, 
+                "wwwroot", 
+                requestedPath
+            );
 
             Console.WriteLine($"Ищем файл: {filePath}"); // ← добавить перед проверкой File.Exists
+
+            // После объявления filePath:
+            Console.WriteLine($"Содержимое папки wwwroot: {string.Join(", ", Directory.GetFiles("/app/wwwroot"))}");
 
             if (File.Exists(filePath))
             {
