@@ -5,7 +5,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="keywords" content="test, site, music">
     <meta name="description" content="Это сайт музыкальный плеер для замедления и ускорения музыки">
-    <link href="tarsicon.ico" rel="shortcut icon" type="image/x-icon">
+    <!-- Стандартная иконка -->
+    <link rel="icon" href="/tarsicon.ico" type="image/x-icon">
+    <link rel="shortcut icon" href="/tarsicon.ico" type="image/x-icon">
+
+    <!-- Для Apple устройств (добавь эти строки) -->
+    <link rel="apple-touch-icon" href="/tarspng.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="/tarspng.png">
+
     <title>Xtal</title>
     <style>
         body {
@@ -19,7 +26,7 @@
             color: white;
         }
         
-        
+
         @keyframes gradientBorder {
             0% { background-position: 0% 50%; }
             50% { background-position: 100% 50%; }
