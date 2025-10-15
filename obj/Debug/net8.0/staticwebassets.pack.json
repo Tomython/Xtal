@@ -1,24 +1,40 @@
 {
   "Files": [
     {
-      "Id": "/Users/tomython/Documents/Visual Studio Code Project/XtalPlayer/wwwroot/XtalHtml.html",
-      "PackagePath": "staticwebassets/XtalHtml.html"
+      "Id": "/Users/tomython/Documents/Visual Studio Code Project/XtalPlayer/wwwroot/css/site.css",
+      "PackagePath": "staticwebassets/css/site.css"
     },
     {
-      "Id": "/Users/tomython/Documents/Visual Studio Code Project/XtalPlayer/wwwroot/blackxtalvideo.mp4",
-      "PackagePath": "staticwebassets/blackxtalvideo.mp4"
+      "Id": "/Users/tomython/Documents/Visual Studio Code Project/XtalPlayer/wwwroot/images/placeholder.png",
+      "PackagePath": "staticwebassets/images/placeholder.png"
     },
     {
-      "Id": "/Users/tomython/Documents/Visual Studio Code Project/XtalPlayer/wwwroot/scse.html",
-      "PackagePath": "staticwebassets/scse.html"
+      "Id": "/Users/tomython/Documents/Visual Studio Code Project/XtalPlayer/wwwroot/images/tarsicon.ico",
+      "PackagePath": "staticwebassets/images/tarsicon.ico"
     },
     {
-      "Id": "/Users/tomython/Documents/Visual Studio Code Project/XtalPlayer/wwwroot/tarsicon.ico",
-      "PackagePath": "staticwebassets/tarsicon.ico"
+      "Id": "/Users/tomython/Documents/Visual Studio Code Project/XtalPlayer/wwwroot/images/tarspng.png",
+      "PackagePath": "staticwebassets/images/tarspng.png"
     },
     {
-      "Id": "/Users/tomython/Documents/Visual Studio Code Project/XtalPlayer/wwwroot/test.html",
-      "PackagePath": "staticwebassets/test.html"
+      "Id": "/Users/tomython/Documents/Visual Studio Code Project/XtalPlayer/wwwroot/js/site.js",
+      "PackagePath": "staticwebassets/js/site.js"
+    },
+    {
+      "Id": "/Users/tomython/Documents/Visual Studio Code Project/XtalPlayer/wwwroot/legacy/XtalHtml.html",
+      "PackagePath": "staticwebassets/legacy/XtalHtml.html"
+    },
+    {
+      "Id": "/Users/tomython/Documents/Visual Studio Code Project/XtalPlayer/wwwroot/legacy/hfd.html",
+      "PackagePath": "staticwebassets/legacy/hfd.html"
+    },
+    {
+      "Id": "/Users/tomython/Documents/Visual Studio Code Project/XtalPlayer/wwwroot/manifest.json",
+      "PackagePath": "staticwebassets/manifest.json"
+    },
+    {
+      "Id": "/Users/tomython/Documents/Visual Studio Code Project/XtalPlayer/wwwroot/videos/blackxtalvideo.mp4",
+      "PackagePath": "staticwebassets/videos/blackxtalvideo.mp4"
     },
     {
       "Id": "obj/Debug/net8.0/staticwebassets/msbuild.XtalPlayer.Microsoft.AspNetCore.StaticWebAssets.props",

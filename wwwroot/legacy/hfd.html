@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="keywords" content="xtal, music, player, slowdown, speedup">
+    <meta name="description" content="Xtal — минималистичный оффлайн‑аудиоплеер с возможностью замедления / ускорения трека и динамическими визуальными волнами.">
+    <link rel="icon" href="/tarsicon.ico" type="image/x-icon">
+    <link rel="shortcut icon" href="/tarsicon.ico" type="image/x-icon">
+    <link rel="apple-touch-icon" href="/tarspng.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="/tarspng.png">
+
+    <title>Xtal</title>
+    <style>
+        :root {
+            --accent: #4caf50;
+            --accent-hover: #45a049;
+        }
+        html,body{height:100%;margin:0}
+        body{
+            font-family:Arial,Helvetica,sans-serif;
+            display:flex;flex-direction:column;align-items:center;justify-content:center;
+            background:#000;color:#fff;overflow:hidden;
+        }
+        /* ---------- BACKGROUND VISUALIZER ---------- */
+        #viz{
+            position:fixed;inset:0;
+            width:100%;height:100%;z-index:-1;
+            background:#000;
+        }
+        /* ---------- STATIC UI ---------- */
+        video{width:240px;height:120px;border-radius:12px;object-fit:cover}
+        #coverArt{width:200px;height:200px;border-radius:10px;object-fit:cover;margin:12px 0}
+        #trackTitle{text-align:center;font-weight:bold;margin-top:2px}
+        #player-container{
+            background:#afafaf22;padding:20px;border-radius:10px;backdrop-filter:blur(4px);
+            width:min(92vw,400px);box-shadow:0 0 10px rgba(255,255,255,.6);
+        }
+        button{background:var(--accent);border:none;color:#fff;padding:10px 20px;margin:10px;border-radius:5px;cursor:pointer;min-width:96px}
+        button:hover{background:var(--accent-hover)}
+        input[type="range"]{width:100%}
+        #speedLabel{display:flex;align-items:center;gap:8px;justify-content:center;margin-top:10px}
+        #speedValue{font-variant-numeric:tabular-nums;min-width:3ch}
+        @media(max-width:500px){#coverArt{width:160px;height:160px}}
+    </style>
+</head>
+<body>
+    <!-- ТВИН‑ПИКС логотип :) -->
+    <canvas id="viz"></canvas>
+    <video autoplay loop muted width="240px 120px">
+        <source src="blackxtalvideo.mp4" type="video/mp4">
+      </video>
+    <input type="file" id="audioFileInput" accept="audio/*">
+    <img id="coverArt" src="placeholder.png" alt="Cover">
+    <div id="trackTitle">Track</div>
+    <div id="player-container">
+        <button id="playPause">Play</button>
+        <input type="range" id="seekBar" min="0" max="100" value="0">
+        <div id="timeDisplay">00:00 / 00:00</div>
+        <div id="speedLabel">
+            <span>Speed:</span>
+            <input type="range" id="speedControl" min="0.5" max="1.5" step="0.01" value="1">
+            <span id="speedValue">1.00×</span>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jsmediatags/3.9.5/jsmediatags.min.js"></script>
+    <script>
+        /* ---------- DOM ---------- */
+        const $ = id=>document.getElementById(id);
+        const audioFileInput = $("audioFileInput");
+        const playPauseBtn    = $("playPause");
+        const seekBar         = $("seekBar");
+        const timeDisplay     = $("timeDisplay");
+        const speedControl    = $("speedControl");
+        const speedValue      = $("speedValue");
+        const coverArt        = $("coverArt");
+        const trackTitle      = $("trackTitle");
+        const canvas          = $("viz");
+        const ctx             = canvas.getContext("2d");
+
+        /* ---------- AUDIO ---------- */
+        const audioCtx = new (window.AudioContext||window.webkitAudioContext)();
+        let analyser = null;
+        let sourceNode=null, buffer=null;
+        let isPlaying=false, startTime=0, pauseOffset=0, duration=0, rafID=0;
+
+        /* ---------- HELPERS ---------- */
+        const resize = () => { canvas.width=innerWidth*devicePixelRatio; canvas.height=innerHeight*devicePixelRatio; };
+        addEventListener('resize',resize); resize();
+        const fmt=n=>n.toString().padStart(2,'0');
+        const updateTimer=t=>{
+            const cur=Math.min(t,duration);
+            timeDisplay.textContent=`${fmt(Math.floor(cur/60))}:${fmt(Math.floor(cur%60))} / ${fmt(Math.floor(duration/60))}:${fmt(Math.floor(duration%60))}`;
+        };
+        const resetUI=()=>{isPlaying=false;playPauseBtn.textContent='Play';cancelAnimationFrame(rafID);};
+
+        /* ---------- LOAD FILE ---------- */
+        audioFileInput.addEventListener('change',async e=>{
+            const file=e.target.files[0]; if(!file) return;
+            buffer = await audioCtx.decodeAudioData(await file.arrayBuffer());
+            duration = buffer.duration; seekBar.max = duration; pauseOffset=0; updateTimer(0);
+            jsmediatags.read(file,{
+                onSuccess:tag=>{
+                    trackTitle.textContent=tag.tags.title||file.name;
+                    if(tag.tags.picture){ const {data,format}=tag.tags.picture; coverArt.src=URL.createObjectURL(new Blob([new Uint8Array(data)],{type:format})); }
+                    else coverArt.src='placeholder.png';
+                },onError:()=>{ trackTitle.textContent=file.name; coverArt.src='placeholder.png'; }
+            });
+        });
+
+        /* ---------- PLAY / PAUSE ---------- */
+        async function play(){
+            if(!buffer) return;
+            if(audioCtx.state==='suspended') await audioCtx.resume();
+            if(sourceNode){ sourceNode.stop(); sourceNode.disconnect(); }
+            sourceNode = audioCtx.createBufferSource();
+            sourceNode.buffer=buffer;
+            sourceNode.playbackRate.value=parseFloat(speedControl.value);
+            sourceNode.onended=ended;
+
+            // Visual analyser (init once)
+            if(!analyser){ analyser=audioCtx.createAnalyser(); analyser.fftSize=256; }
+            sourceNode.connect(analyser).connect(audioCtx.destination);
+
+            sourceNode.start(0,pauseOffset);
+            startTime=audioCtx.currentTime-pauseOffset;
+            isPlaying=true; playPauseBtn.textContent='Pause';
+            cancelAnimationFrame(rafID); draw(); updateSeek();
+        }
+        function pause(){
+            if(!isPlaying) return;
+            sourceNode.stop(); sourceNode.disconnect(); sourceNode=null;
+            pauseOffset=audioCtx.currentTime-startTime; resetUI();
+        }
+        function ended(){ pauseOffset=0; seekBar.value=duration; updateTimer(duration); resetUI(); }
+        playPauseBtn.addEventListener('click',()=>isPlaying?pause():play());
+
+        /* ---------- VISUALIZER ---------- */
+        const freqData = new Uint8Array(128);
+        function draw(){
+            rafID=requestAnimationFrame(draw);
+            analyser.getByteFrequencyData(freqData);
+            // average amplitude
+            const avg = freqData.reduce((s,v)=>s+v,0)/freqData.length;
+            const W=canvas.width, H=canvas.height, cx=W/2, cy=H/2;
+            ctx.clearRect(0,0,W,H);
+            // glowing radial gradient
+            const r0=Math.min(W,H)*0.25, r=r0+avg*1.5;
+            const g=ctx.createRadialGradient(cx,cy,r0*0.1,cx,cy,r);
+            g.addColorStop(0,`rgba(${200+avg},${200-avg/2},0,0.85)`); // yellow core
+            g.addColorStop(0.4,`rgba(${255-avg/2},${avg},${avg},0.6)`); // transition
+            g.addColorStop(1,'rgba(0,0,0,0)');
+            ctx.fillStyle=g;
+            ctx.fillRect(0,0,W,H);
+            // streaks — simple motion‑blur lines
+            ctx.globalAlpha=0.08; ctx.fillStyle='#000'; ctx.fillRect(0,0,W,H);
+            ctx.globalAlpha=1;
+        }
+
+        /* ---------- SEEK + SPEED ---------- */
+        function updateSeek(){ if(!isPlaying) return; const cur=audioCtx.currentTime-startTime; seekBar.value=cur; updateTimer(cur); requestAnimationFrame(updateSeek); }
+        seekBar.addEventListener('input',e=>{ pauseOffset=parseFloat(e.target.value); updateTimer(pauseOffset); if(isPlaying) play(); });
+        const updSpeed=()=>{ speedValue.textContent=parseFloat(speedControl.value).toFixed(2)+'×'; if(sourceNode) sourceNode.playbackRate.value=parseFloat(speedControl.value); };
+        speedControl.addEventListener('input',updSpeed); updSpeed();
+    </script>
+</body>
+</html>

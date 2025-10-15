@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="keywords" content="test, site, music">
+    <meta name="description" content="Это сайт музыкальный плеер для замедления и ускорения музыки">
+    <!-- Стандартная иконка -->
+    <link rel="icon" href="/tarsicon.ico" type="image/x-icon">
+    <link rel="shortcut icon" href="/tarsicon.ico" type="image/x-icon">
+
+    <!-- Для Apple устройств (добавь эти строки) -->
+    <link rel="apple-touch-icon" href="/tarspng.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="/tarspng.png">
+
+    <title>Xtal</title>
+    <style>
+        :root {
+            --primary-color: #4CAF50;
+            --primary-hover: #45a049;
+            --background-gradient: linear-gradient(180deg, #000000, #101010);
+            --container-bg: rgba(175, 175, 175, 0.9);
+            --text-gradient: linear-gradient(180deg, gray, white);
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+            background: var(--background-gradient);
+            color: white;
+        }
+
+        @keyframes gradientBorder {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        @keyframes glowing {
+            0% { box-shadow: 0 0 5px rgba(128, 128, 128, 0.5); }
+            50% { box-shadow: 0 0 15px rgba(255, 255, 255, 0.8); }
+            100% { box-shadow: 0 0 5px rgba(128, 128, 128, 0.5); }
+        }
+
+        #coverArt {
+            width: 200px;
+            height: 200px;
+            object-fit: cover;
+            border-radius: 10px;
+            display: block;
+            margin: 10px auto;
+            border: 0px solid transparent;
+            background: linear-gradient(45deg, rgb(40, 40, 40), rgb(154, 154, 154), rgb(165, 165, 165), rgb(32, 32, 32));
+            background-size: 300% 300%;
+            background-clip: padding-box;
+            animation: gradientBorder 3s infinite alternate, glowing 2s infinite alternate;
+        }
+
+        #trackTitle {
+            font-family: Helvetica, sans-serif;
+            background: var(--text-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-align: center;
+            margin: 10px 0;
+        }
+
+        #player-container {
+            background: var(--container-bg);
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0px 0px 10px rgba(255, 255, 255, 0.6);
+            text-align: center;
+            backdrop-filter: blur(4px);
+            width: min(90vw, 400px);
+        }
+
+        button {
+            background: var(--primary-color);
+            border: none;
+            color: white;
+            padding: 10px 20px;
+            margin: 10px;
+            cursor: pointer;
+            border-radius: 5px;
+            transition: background-color 0.3s ease;
+            min-width: 80px;
+        }
+
+        button:hover {
+            background: var(--primary-hover);
+        }
+
+        input[type="range"] {
+            width: 100%;
+            margin: 10px 0;
+        }
+
+        input[type="file"] {
+            margin: 10px 0;
+            color: white;
+        }
+
+        video {
+            border-radius: 12px;
+            margin: 10px 0;
+        }
+
+        #timeDisplay {
+            margin: 10px 0;
+            font-family: monospace;
+        }
+
+        @media (max-width: 500px) {
+            #coverArt {
+                width: 160px;
+                height: 160px;
+            }
+            
+            #player-container {
+                width: 95vw;
+                padding: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- <img width="240px 120px" src="xtalgif.gif" alt="Logo"> -->
+    <video autoplay loop muted width="240px 120px">
+        <source src="blackxtalvideo.mp4" type="video/mp4">
+      </video>
+      
+    <input type="file" id="audioFileInput" accept="audio/*">
+    <img id="coverArt" src="placeholder.png" alt="Обложка">
+    <div id="trackTitle" style="font-family: Arial, Helvetica, sans-serif; color: linear-gradient(180deg, gray, white)"><b>Track</b></div>
+    <div id="player-container">
+        <button id="playPause">Play</button>
+        <input type="range" id="seekBar" min="0" max="100" value="0">
+        <div id="timeDisplay">00:00 / 00:00</div>
+        <label>Speed: <input type="range" id="speedControl" min="0.5" max="1.5" step="0.01" value="1"></label>
+    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jsmediatags/3.9.5/jsmediatags.min.js"></script>
+    <script>
+        // DOM Elements
+        const audioFileInput = document.getElementById('audioFileInput');
+        const playPauseButton = document.getElementById('playPause');
+        const seekBar = document.getElementById('seekBar');
+        const timeDisplay = document.getElementById('timeDisplay');
+        const speedControl = document.getElementById('speedControl');
+        const coverArt = document.getElementById('coverArt');
+        const trackTitle = document.getElementById('trackTitle');
+        
+        // Audio Context and State
+        let audioContext = null;
+        let sourceNode = null;
+        let audioBuffer = null;
+        let isPlaying = false;
+        let startTime = 0;
+        let pauseOffset = 0;
+        let duration = 0;
+        let animationFrameId = null;
+
+        // Initialize audio context on first user interaction
+        function initAudioContext() {
+            if (!audioContext) {
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            }
+            return audioContext;
+        }
+
+        // Format time helper
+        function formatTime(seconds) {
+            const minutes = Math.floor(seconds / 60);
+            const secs = Math.floor(seconds % 60);
+            return `${minutes}:${secs.toString().padStart(2, '0')}`;
+        }
+
+        // Update timer display
+        function updateTimer(time) {
+            const currentTime = Math.min(time, duration);
+            timeDisplay.textContent = `${formatTime(currentTime)} / ${formatTime(duration)}`;
+        }
+
+        // Update seek bar
+        function updateSeekBar() {
+            if (isPlaying && audioContext) {
+                const currentTime = audioContext.currentTime - startTime;
+                seekBar.value = currentTime;
+                updateTimer(currentTime);
+                animationFrameId = requestAnimationFrame(updateSeekBar);
+            }
+        }
+
+        // Reset UI state
+        function resetUI() {
+            isPlaying = false;
+            playPauseButton.textContent = 'Play';
+            if (animationFrameId) {
+                cancelAnimationFrame(animationFrameId);
+                animationFrameId = null;
+            }
+        }
+
+        // Play audio
+        async function playAudio() {
+            if (!audioBuffer) return;
+            
+            try {
+                const ctx = initAudioContext();
+                if (ctx.state === 'suspended') {
+                    await ctx.resume();
+                }
+                
+                if (sourceNode) {
+                    sourceNode.stop();
+                    sourceNode.disconnect();
+                }
+                
+                sourceNode = ctx.createBufferSource();
+                sourceNode.buffer = audioBuffer;
+                sourceNode.playbackRate.value = parseFloat(speedControl.value);
+                sourceNode.connect(ctx.destination);
+                
+                sourceNode.start(0, pauseOffset);
+                startTime = ctx.currentTime - pauseOffset;
+                isPlaying = true;
+                playPauseButton.textContent = 'Pause';
+                updateSeekBar();
+            } catch (error) {
+                console.error('Error playing audio:', error);
+                resetUI();
+            }
+        }
+
+        // Pause audio
+        function pauseAudio() {
+            if (sourceNode && isPlaying) {
+                sourceNode.stop();
+                sourceNode.disconnect();
+                sourceNode = null;
+                pauseOffset = audioContext.currentTime - startTime;
+                resetUI();
+            }
+        }
+
+        // Handle file input
+        audioFileInput.addEventListener('change', async function(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            try {
+                const ctx = initAudioContext();
+                const arrayBuffer = await file.arrayBuffer();
+                audioBuffer = await ctx.decodeAudioData(arrayBuffer);
+                duration = audioBuffer.duration;
+                seekBar.max = duration;
+                pauseOffset = 0;
+                updateTimer(0);
+                
+                // Reset UI
+                resetUI();
+                
+                // Read metadata
+                jsmediatags.read(file, {
+                    onSuccess: function (tag) {
+                        trackTitle.textContent = tag.tags.title || file.name;
+                        if (tag.tags.picture) {
+                            const { data, format } = tag.tags.picture;
+                            const blob = new Blob([new Uint8Array(data)], { type: format });
+                            coverArt.src = URL.createObjectURL(blob);
+                        } else {
+                            coverArt.src = "placeholder.png";
+                        }
+                    },
+                    onError: function () {
+                        trackTitle.textContent = file.name;
+                        coverArt.src = "placeholder.png";
+                    }
+                });
+            } catch (error) {
+                console.error('Error loading audio file:', error);
+                alert('Error loading audio file. Please try a different file.');
+            }
+        });
+
+        // Play/Pause button
+        playPauseButton.addEventListener('click', function() {
+            if (isPlaying) {
+                pauseAudio();
+            } else {
+                playAudio();
+            }
+        });
+
+        // Seek bar
+        seekBar.addEventListener('input', function() {
+            pauseOffset = parseFloat(seekBar.value);
+            updateTimer(pauseOffset);
+            if (isPlaying) {
+                playAudio();
+            }
+        });
+
+        // Speed control
+        speedControl.addEventListener('input', function() {
+            if (sourceNode) {
+                sourceNode.playbackRate.value = parseFloat(speedControl.value);
+            }
+        });
+
+        // Cleanup on page unload
+        window.addEventListener('beforeunload', function() {
+            if (sourceNode) {
+                sourceNode.stop();
+            }
+            if (animationFrameId) {
+                cancelAnimationFrame(animationFrameId);
+            }
+        });
+    </script>
+</body>
+</html>

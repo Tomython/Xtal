@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="keywords" content="xtal, music, player, audio, speed control, web audio api" />
+    <meta name="description" content="Xtal Player - A modern, minimalist audio player with speed control and visualizations" />
+    <title>@ViewData["Title"] - Xtal Player</title>
+    
+    <!-- Favicons -->
+    <link rel="icon" href="~/images/tarsicon.ico" type="image/x-icon">
+    <link rel="shortcut icon" href="~/images/tarsicon.ico" type="image/x-icon">
+    <link rel="apple-touch-icon" href="~/images/tarspng.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="~/images/tarspng.png">
+    
+    <!-- Stylesheets -->
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    @await RenderSectionAsync("Styles", required: false)
+</head>
+<body>
+    <main>
+        @RenderBody()
+    </main>
+    
+    <!-- Scripts -->
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>
