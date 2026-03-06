@@ -3,262 +3,103 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="keywords" content="xtal, site, music, youtube">
-    <meta name="description" content="Музыкальный плеер для замедления и ускорения музыки">
-    
-    <link rel="icon" href="/tarsicon.ico" type="image/x-icon">
-    <link rel="shortcut icon" href="/tarsicon.ico" type="image/x-icon">
-    <link rel="apple-touch-icon" href="/tarspng.png">
-    <link rel="apple-touch-icon" sizes="180x180" href="/tarspng.png">
-
-    <title>Xtal</title>
+    <title>Xtal Player</title>
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            height: 100vh;
-            margin: 0;
-            background: linear-gradient(180deg, #000000, #101010);
-            color: white;
-        }
-        
-        @keyframes gradientBorder {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
-        }
-
-        @keyframes glowing {
-            0% { box-shadow: 0 0 5px gray; }
-            50% { box-shadow: 0 0 10px white; }
-            100% { box-shadow: 0 0 5px gray; }
-        }
-
-        #coverArt {
-            width: 200px;
-            height: 200px;
-            object-fit: cover;
-            border-radius: 10px;
-            display: block;
-            margin: 10px auto;
-            border: 0px solid transparent;
-            background: linear-gradient(45deg, rgb(40, 40, 40), rgb(154, 154, 154), rgb(165, 165, 165), rgb(32, 32, 32));
-            background-size: 300% 300%;
-            background-clip: padding-box;
-            animation: gradientBorder 3s infinite alternate, glowing 2s infinite alternate;
-        }
-
-        #trackTitle {
-            font-family: Helvetica, sans-serif;
-            color: lightgray;
-            margin-bottom: 15px;
-            text-align: center;
-            max-width: 300px;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-
-        #player-container {
-            background: #afafaf;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0px 0px 10px rgba(255, 255, 255, 0.6);
-            text-align: center;
-            width: 300px;
-            color: black;
-        }
-
-        button {
-            background: #4CAF50;
-            border: none;
-            color: white;
-            padding: 10px 20px;
-            margin: 10px;
-            cursor: pointer;
-            border-radius: 5px;
-            font-weight: bold;
-            transition: background 0.2s;
-        }
-        button:hover { background: #45a049; }
-        button:disabled { background: #888; cursor: not-allowed; }
-
+        body { font-family: Arial, sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; margin: 0; background: #000; color: #fff; }
+        #player-card { background: #1a1a1a; padding: 20px; border-radius: 15px; width: 320px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        .input-group { display: flex; gap: 5px; margin-bottom: 15px; }
+        input[type="text"] { flex: 1; padding: 10px; border-radius: 5px; border: none; background: #333; color: #fff; }
+        button { background: #4CAF50; border: none; color: white; padding: 10px; border-radius: 5px; cursor: pointer; font-weight: bold; }
+        #coverArt { width: 100%; height: 200px; object-fit: cover; border-radius: 10px; margin: 10px 0; background: #222; }
         input[type="range"] { width: 100%; margin: 10px 0; }
-        
-        .yt-box {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 15px;
-            width: 100%;
-            justify-content: center;
-        }
-        #ytUrl {
-            flex-grow: 1;
-            padding: 8px;
-            border-radius: 5px;
-            border: 1px solid #ccc;
-        }
+        #trackTitle { margin: 10px 0; font-weight: bold; font-size: 14px; color: #ccc; }
     </style>
 </head>
 <body>
 
-    <video autoplay loop muted width="240" height="120" style="margin-bottom: 15px; border-radius: 10px;">
-        <source src="blackxtalvideo.mp4" type="video/mp4">
-    </video>
-      
-    <audio id="core-audio" crossorigin="anonymous"></audio>
+    <div id="player-card">
+        <div class="input-group">
+            <input type="text" id="ytUrl" placeholder="Вставь ссылку на YouTube">
+            <button id="loadYtBtn">GO</button>
+        </div>
 
-    <div class="yt-box" style="width: 340px;">
-        <input type="text" id="ytUrl" placeholder="Ссылка на YouTube">
-        <button id="loadYtBtn" style="margin:0;">Стримить</button>
-    </div>
+        <input type="file" id="fileInput" accept="audio/*" style="font-size: 12px; margin-bottom: 10px;">
+        
+        <img id="coverArt" src="placeholder.jpg">
+        <div id="trackTitle">Xtal Player</div>
 
-    <input type="file" id="audioFileInput" accept="audio/*" style="margin-bottom: 15px;">
-    
-    <img id="coverArt" src="placeholder.jpg" alt="Обложка">
-    <div id="trackTitle"><b>Track</b></div>
-    
-    <div id="player-container">
-        <button id="playPause">Play</button>
-        <input type="range" id="seekBar" min="0" max="100" value="0" step="0.1">
-        <div id="timeDisplay">00:00 / 00:00</div>
-        <label style="display:block; margin-top: 10px;">Speed: <span id="speedValue">1.00</span>x<br>
-            <input type="range" id="speedControl" min="0.5" max="2.0" step="0.05" value="1">
+        <audio id="mainAudio" crossorigin="anonymous"></audio>
+
+        <div style="display: flex; justify-content: space-between; font-size: 12px;">
+            <button id="playBtn" style="width: 70px;">Play</button>
+            <div id="time">00:00 / 00:00</div>
+        </div>
+
+        <input type="range" id="seekBar" value="0" step="0.1">
+        
+        <label style="font-size: 13px;">Speed: <span id="spTxt">1.00</span>x
+            <input type="range" id="speedCtrl" min="0.5" max="2.0" step="0.05" value="1">
         </label>
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jsmediatags/3.9.5/jsmediatags.min.js"></script>
     <script>
-        const audioFileInput = document.getElementById('audioFileInput');
-        const playPauseButton = document.getElementById('playPause');
+        const audio = document.getElementById('mainAudio');
+        const playBtn = document.getElementById('playBtn');
         const seekBar = document.getElementById('seekBar');
-        const timeDisplay = document.getElementById('timeDisplay');
-        const speedControl = document.getElementById('speedControl');
-        const speedValue = document.getElementById('speedValue');
-        const coverArt = document.getElementById('coverArt');
+        const speedCtrl = document.getElementById('speedCtrl');
         const trackTitle = document.getElementById('trackTitle');
-        const ytUrl = document.getElementById('ytUrl');
-        const loadYtBtn = document.getElementById('loadYtBtn');
-        const coreAudio = document.getElementById('core-audio');
-        
-        let audioContext;
-        let mediaSource = null;
+        const ytBtn = document.getElementById('loadYtBtn');
 
-        // Инициализация Web Audio API по первому клику (требование браузеров)
-        function initAudioContext() {
-            if (!audioContext) {
-                audioContext = new (window.AudioContext || window.webkitAudioContext)();
-                mediaSource = audioContext.createMediaElementSource(coreAudio);
-                mediaSource.connect(audioContext.destination);
-            }
-            if (audioContext.state === 'suspended') audioContext.resume();
-        }
+        // Генерируем правильный путь к серверу
+        const getServerUrl = (path) => {
+            const host = window.location.origin.includes('file://') ? 'http://localhost:2025' : '';
+            return `${host}${path}`;
+        };
 
-        // --- ЛОКАЛЬНЫЙ ФАЙЛ ---
-        audioFileInput.addEventListener('change', function(event) {
-            const file = event.target.files[0];
-            if (!file) return;
-            
-            initAudioContext();
-            
-            // Мгновенная ссылка на локальный файл вместо долгого decodeAudioData
-            coreAudio.src = URL.createObjectURL(file);
-            coreAudio.playbackRate = speedControl.value;
-            coreAudio.play();
-            
-            jsmediatags.read(file, {
-                onSuccess: function (tag) {
-                    trackTitle.innerHTML = `<b>${tag.tags.title || file.name}</b>`;
-                    if (tag.tags.picture) {
-                        let { data, format } = tag.tags.picture;
-                        let blob = new Blob([new Uint8Array(data)], { type: format });
-                        coverArt.src = URL.createObjectURL(blob);
-                    } else {
-                        coverArt.src = "placeholder.jpg";
-                    }
-                },
-                onError: function () {
-                    trackTitle.innerHTML = `<b>${file.name}</b>`;
-                    coverArt.src = "placeholder.jpg";
-                }
+        // Загрузка YouTube
+        ytBtn.onclick = () => {
+            const url = document.getElementById('ytUrl').value;
+            if(!url) return;
+            ytBtn.textContent = "...";
+            audio.src = getServerUrl(`/stream-yt?url=${encodeURIComponent(url)}`);
+            audio.load();
+            audio.play().then(() => {
+                trackTitle.textContent = "YouTube Stream";
+                ytBtn.textContent = "GO";
+            }).catch(e => {
+                alert("Ошибка! Открой сайт через http://localhost:2025");
+                ytBtn.textContent = "GO";
             });
-        });
+        };
 
-        // --- YOUTUBE СТРИМИНГ ---
-        loadYtBtn.addEventListener('click', async () => {
-            const url = ytUrl.value;
-            if (!url) return;
+        // Локальный файл
+        document.getElementById('fileInput').onchange = (e) => {
+            const file = e.target.files[0];
+            audio.src = URL.createObjectURL(file);
+            audio.play();
+            trackTitle.textContent = file.name;
+        };
 
-            initAudioContext();
-            loadYtBtn.textContent = 'Ищем...';
-            loadYtBtn.disabled = true;
-
-            try {
-                const res = await fetch(`/get-yt?url=${encodeURIComponent(url)}`);
-                const data = await res.json();
-
-                if (data.url) {
-                    coreAudio.src = data.url;
-                    coreAudio.playbackRate = speedControl.value;
-                    coreAudio.play();
-                    
-                    trackTitle.innerHTML = "<b>YouTube Track</b>";
-                    coverArt.src = "placeholder.jpg";
-                    ytUrl.value = ""; // Очищаем поле
-                }
-            } catch (err) {
-                alert("Ошибка загрузки. Проверьте ссылку.");
-                console.error(err);
-            } finally {
-                loadYtBtn.textContent = 'Стримить';
-                loadYtBtn.disabled = false;
+        // Управление
+        playBtn.onclick = () => audio.paused ? audio.play() : audio.pause();
+        audio.onplay = () => playBtn.textContent = 'Pause';
+        audio.onpause = () => playBtn.textContent = 'Play';
+        
+        audio.ontimeupdate = () => {
+            if(!isNaN(audio.duration)) {
+                seekBar.max = audio.duration;
+                seekBar.value = audio.currentTime;
+                const fmt = (s) => new Date(s * 1000).toISOString().substr(14, 5);
+                document.getElementById('time').textContent = `${fmt(audio.currentTime)} / ${fmt(audio.duration)}`;
             }
-        });
+        };
 
-        // --- УПРАВЛЕНИЕ ПЛЕЕРОМ ---
-        playPauseButton.addEventListener('click', function() {
-            initAudioContext();
-            if (coreAudio.paused) {
-                coreAudio.play();
-            } else {
-                coreAudio.pause();
-            }
-        });
-
-        coreAudio.addEventListener('play', () => playPauseButton.textContent = 'Pause');
-        coreAudio.addEventListener('pause', () => playPauseButton.textContent = 'Play');
-
-        // Обновление ползунка и времени
-        coreAudio.addEventListener('timeupdate', () => {
-            if (isNaN(coreAudio.duration)) return;
-            seekBar.max = coreAudio.duration;
-            seekBar.value = coreAudio.currentTime;
-            updateTimer(coreAudio.currentTime, coreAudio.duration);
-        });
-
-        // Перемотка
-        seekBar.addEventListener('input', () => {
-            coreAudio.currentTime = seekBar.value;
-        });
-
-        // Скорость
-        speedControl.addEventListener('input', () => {
-            const speed = parseFloat(speedControl.value);
-            coreAudio.playbackRate = speed;
-            speedValue.textContent = speed.toFixed(2);
-        });
-
-        function updateTimer(current, total) {
-            const format = (t) => {
-                let m = Math.floor(t / 60);
-                let s = Math.floor(t % 60);
-                return `${m}:${s.toString().padStart(2, '0')}`;
-            };
-            timeDisplay.textContent = `${format(current)} / ${format(total)}`;
-        }
+        seekBar.oninput = () => audio.currentTime = seekBar.value;
+        speedCtrl.oninput = () => {
+            audio.playbackRate = speedCtrl.value;
+            document.getElementById('spTxt').textContent = parseFloat(speedCtrl.value).toFixed(2);
+        };
     </script>
 </body>
 </html>

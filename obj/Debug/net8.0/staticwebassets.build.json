@@ -1,6 +1,6 @@
 {
   "Version": 1,
-  "Hash": "iee3Pd5Qiymcf8dXlDE1vLzxa4l/boyaiIFUqE3ZPbU=",
+  "Hash": "PetbtlwrLeVcNUcCpCKeAkp9w2P3solRXRIa648iEks=",
   "Source": "XtalPlayer",
   "BasePath": "_content/XtalPlayer",
   "Mode": "Default",
@@ -10,17 +10,17 @@
     {
       "Name": "XtalPlayer/wwwroot",
       "Source": "XtalPlayer",
-      "ContentRoot": "/Users/tomython/Documents/Visual Studio Code Project/XtalPlayer/wwwroot/",
+      "ContentRoot": "/Users/tomython/Documents/Visual Studio Code Project/Xtal/wwwroot/",
       "BasePath": "_content/XtalPlayer",
       "Pattern": "**"
     }
   ],
   "Assets": [
     {
-      "Identity": "/Users/tomython/Documents/Visual Studio Code Project/XtalPlayer/wwwroot/blackxtalvideo.mp4",
+      "Identity": "/Users/tomython/Documents/Visual Studio Code Project/Xtal/wwwroot/blackxtalvideo.mp4",
       "SourceId": "XtalPlayer",
       "SourceType": "Discovered",
-      "ContentRoot": "/Users/tomython/Documents/Visual Studio Code Project/XtalPlayer/wwwroot/",
+      "ContentRoot": "/Users/tomython/Documents/Visual Studio Code Project/Xtal/wwwroot/",
       "BasePath": "_content/XtalPlayer",
       "RelativePath": "blackxtalvideo.mp4",
       "AssetKind": "All",
@@ -36,29 +36,10 @@
       "OriginalItemSpec": "wwwroot/blackxtalvideo.mp4"
     },
     {
-      "Identity": "/Users/tomython/Documents/Visual Studio Code Project/XtalPlayer/wwwroot/scse.html",
+      "Identity": "/Users/tomython/Documents/Visual Studio Code Project/Xtal/wwwroot/tarsicon.ico",
       "SourceId": "XtalPlayer",
       "SourceType": "Discovered",
-      "ContentRoot": "/Users/tomython/Documents/Visual Studio Code Project/XtalPlayer/wwwroot/",
-      "BasePath": "_content/XtalPlayer",
-      "RelativePath": "scse.html",
-      "AssetKind": "All",
-      "AssetMode": "All",
-      "AssetRole": "Primary",
-      "AssetMergeBehavior": "PreferTarget",
-      "AssetMergeSource": "",
-      "RelatedAsset": "",
-      "AssetTraitName": "",
-      "AssetTraitValue": "",
-      "CopyToOutputDirectory": "Never",
-      "CopyToPublishDirectory": "PreserveNewest",
-      "OriginalItemSpec": "wwwroot/scse.html"
-    },
-    {
-      "Identity": "/Users/tomython/Documents/Visual Studio Code Project/XtalPlayer/wwwroot/tarsicon.ico",
-      "SourceId": "XtalPlayer",
-      "SourceType": "Discovered",
-      "ContentRoot": "/Users/tomython/Documents/Visual Studio Code Project/XtalPlayer/wwwroot/",
+      "ContentRoot": "/Users/tomython/Documents/Visual Studio Code Project/Xtal/wwwroot/",
       "BasePath": "_content/XtalPlayer",
       "RelativePath": "tarsicon.ico",
       "AssetKind": "All",
@@ -74,12 +55,12 @@
       "OriginalItemSpec": "wwwroot/tarsicon.ico"
     },
     {
-      "Identity": "/Users/tomython/Documents/Visual Studio Code Project/XtalPlayer/wwwroot/test.html",
+      "Identity": "/Users/tomython/Documents/Visual Studio Code Project/Xtal/wwwroot/tarspng.png",
       "SourceId": "XtalPlayer",
       "SourceType": "Discovered",
-      "ContentRoot": "/Users/tomython/Documents/Visual Studio Code Project/XtalPlayer/wwwroot/",
+      "ContentRoot": "/Users/tomython/Documents/Visual Studio Code Project/Xtal/wwwroot/",
       "BasePath": "_content/XtalPlayer",
-      "RelativePath": "test.html",
+      "RelativePath": "tarspng.png",
       "AssetKind": "All",
       "AssetMode": "All",
       "AssetRole": "Primary",
@@ -90,13 +71,13 @@
       "AssetTraitValue": "",
       "CopyToOutputDirectory": "Never",
       "CopyToPublishDirectory": "PreserveNewest",
-      "OriginalItemSpec": "wwwroot/test.html"
+      "OriginalItemSpec": "wwwroot/tarspng.png"
     },
     {
-      "Identity": "/Users/tomython/Documents/Visual Studio Code Project/XtalPlayer/wwwroot/XtalHtml.html",
+      "Identity": "/Users/tomython/Documents/Visual Studio Code Project/Xtal/wwwroot/XtalHtml.html",
       "SourceId": "XtalPlayer",
       "SourceType": "Discovered",
-      "ContentRoot": "/Users/tomython/Documents/Visual Studio Code Project/XtalPlayer/wwwroot/",
+      "ContentRoot": "/Users/tomython/Documents/Visual Studio Code Project/Xtal/wwwroot/",
       "BasePath": "_content/XtalPlayer",
       "RelativePath": "XtalHtml.html",
       "AssetKind": "All",

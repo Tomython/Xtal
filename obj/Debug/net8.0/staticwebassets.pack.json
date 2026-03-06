@@ -1,24 +1,20 @@
 {
   "Files": [
     {
-      "Id": "/Users/tomython/Documents/Visual Studio Code Project/XtalPlayer/wwwroot/XtalHtml.html",
+      "Id": "/Users/tomython/Documents/Visual Studio Code Project/Xtal/wwwroot/XtalHtml.html",
       "PackagePath": "staticwebassets/XtalHtml.html"
     },
     {
-      "Id": "/Users/tomython/Documents/Visual Studio Code Project/XtalPlayer/wwwroot/blackxtalvideo.mp4",
+      "Id": "/Users/tomython/Documents/Visual Studio Code Project/Xtal/wwwroot/blackxtalvideo.mp4",
       "PackagePath": "staticwebassets/blackxtalvideo.mp4"
     },
     {
-      "Id": "/Users/tomython/Documents/Visual Studio Code Project/XtalPlayer/wwwroot/scse.html",
-      "PackagePath": "staticwebassets/scse.html"
-    },
-    {
-      "Id": "/Users/tomython/Documents/Visual Studio Code Project/XtalPlayer/wwwroot/tarsicon.ico",
+      "Id": "/Users/tomython/Documents/Visual Studio Code Project/Xtal/wwwroot/tarsicon.ico",
       "PackagePath": "staticwebassets/tarsicon.ico"
     },
     {
-      "Id": "/Users/tomython/Documents/Visual Studio Code Project/XtalPlayer/wwwroot/test.html",
-      "PackagePath": "staticwebassets/test.html"
+      "Id": "/Users/tomython/Documents/Visual Studio Code Project/Xtal/wwwroot/tarspng.png",
+      "PackagePath": "staticwebassets/tarspng.png"
     },
     {
       "Id": "obj/Debug/net8.0/staticwebassets/msbuild.XtalPlayer.Microsoft.AspNetCore.StaticWebAssets.props",

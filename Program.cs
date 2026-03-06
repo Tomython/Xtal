@@ -8,107 +8,90 @@ using YoutubeExplode.Videos.Streams;
 
 class Program
 {
-    // Важно: Main теперь async Task
     static async Task Main(string[] args)
     {
         HttpListener listener = new HttpListener();
-        listener.Prefixes.Add("http://*:2025/");
+        // Порт 2025 как ты просил
+        listener.Prefixes.Add("http://*:2025/"); 
         listener.Start();
-        Console.WriteLine("Сервер запущен на порту 2025...");
+        Console.WriteLine("=== XTAL SERVER STARTED ===");
+        Console.WriteLine("Open: http://localhost:2025");
 
         var youtube = new YoutubeClient();
 
         while (true)
         {
-            // Используем GetContextAsync для асинхронности
             HttpListenerContext context = await listener.GetContextAsync();
             HttpListenerRequest request = context.Request;
             HttpListenerResponse response = context.Response;
 
+            // Разрешаем запросы со всех источников (фиксит CORS)
+            response.AppendHeader("Access-Control-Allow-Origin", "*");
+            
             string requestedPath = request.Url.LocalPath.TrimStart('/');
 
-            // --- 1. ОБРАБОТКА YOUTUBE ---
-            if (requestedPath == "get-yt")
+            // --- 1. СТРИМИНГ С YOUTUBE ---
+            if (requestedPath == "stream-yt")
             {
                 try
                 {
                     string videoUrl = request.QueryString["url"];
-                    if (string.IsNullOrEmpty(videoUrl)) throw new Exception("Пустой URL");
+                    if (string.IsNullOrEmpty(videoUrl)) throw new Exception("URL is empty");
+                    
+                    // Очистка ссылки
+                    if (videoUrl.Contains("?si=")) videoUrl = videoUrl.Split("?si=")[0];
 
-                    // Получаем прямую ссылку на аудиопоток
                     var streamManifest = await youtube.Videos.Streams.GetManifestAsync(videoUrl);
                     var streamInfo = streamManifest.GetAudioOnlyStreams().GetWithHighestBitrate();
 
-                    string json = $"{{\"url\": \"{streamInfo.Url}\"}}";
-                    byte[] jsonBuffer = Encoding.UTF8.GetBytes(json);
-
-                    // Разрешаем CORS на всякий случай
-                    response.AppendHeader("Access-Control-Allow-Origin", "*");
-                    response.ContentType = "application/json";
-                    response.ContentLength64 = jsonBuffer.Length;
-                    await response.OutputStream.WriteAsync(jsonBuffer, 0, jsonBuffer.Length);
+                    response.ContentType = "audio/mpeg";
+                    using var ytStream = await youtube.Videos.Streams.GetAsync(streamInfo);
+                    await ytStream.CopyToAsync(response.OutputStream);
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine("Ошибка YouTube: " + ex.Message);
+                    Console.WriteLine($"[YT Error]: {ex.Message}");
                     response.StatusCode = 500;
                 }
-                finally
-                {
-                    response.OutputStream.Close();
-                }
-                continue; // Идем на следующий цикл, не ищем файлы
+                finally { response.OutputStream.Close(); }
+                continue;
             }
 
-            // --- 2. РАЗДАЧА ФАЙЛОВ ---
-            if (string.IsNullOrEmpty(requestedPath)) 
-            {
+            // --- 2. ПОИСК И РАЗДАЧА HTML ---
+            if (string.IsNullOrEmpty(requestedPath) || requestedPath == "XtalHtml.html") 
                 requestedPath = "XtalHtml.html";
-            }
 
             string baseDir = AppDomain.CurrentDomain.BaseDirectory;
-            string wwwrootPath = Path.Combine(baseDir, "wwwroot");
-            
-            // Защита для путей в Docker на Render.com
-            if (!Directory.Exists(wwwrootPath) && Directory.Exists("/app/wwwroot"))
-            {
-                wwwrootPath = "/app/wwwroot";
+            string[] searchPaths = {
+                Path.Combine(baseDir, "wwwroot", requestedPath),
+                Path.Combine(baseDir, requestedPath),
+                Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", requestedPath),
+                Path.Combine(Directory.GetCurrentDirectory(), requestedPath)
+            };
+
+            string foundPath = null;
+            foreach (var path in searchPaths) {
+                if (File.Exists(path)) { foundPath = path; break; }
             }
 
-            string filePath = Path.Combine(wwwrootPath, requestedPath);
-            Console.WriteLine($"Ищем файл: {filePath}");
-
-            if (File.Exists(filePath))
+            if (foundPath != null)
             {
-                try
-                {
-                    byte[] buffer = await File.ReadAllBytesAsync(filePath);
-                    
-                    // Указываем браузеру, какой тип файла мы отдаем
-                    if (filePath.EndsWith(".html")) response.ContentType = "text/html; charset=utf-8";
-                    else if (filePath.EndsWith(".js")) response.ContentType = "application/javascript";
-                    else if (filePath.EndsWith(".css")) response.ContentType = "text/css";
-                    else if (filePath.EndsWith(".mp4")) response.ContentType = "video/mp4";
-                    else if (filePath.EndsWith(".ico")) response.ContentType = "image/x-icon";
-
-                    response.ContentLength64 = buffer.Length;
-                    await response.OutputStream.WriteAsync(buffer, 0, buffer.Length);
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine("Ошибка чтения: " + ex.Message);
-                    response.StatusCode = 500;
-                }
+                byte[] buffer = await File.ReadAllBytesAsync(foundPath);
+                if (foundPath.EndsWith(".html")) response.ContentType = "text/html; charset=utf-8";
+                else if (foundPath.EndsWith(".js")) response.ContentType = "application/javascript";
+                else if (foundPath.EndsWith(".css")) response.ContentType = "text/css";
+                
+                response.ContentLength64 = buffer.Length;
+                await response.OutputStream.WriteAsync(buffer, 0, buffer.Length);
             }
             else
             {
                 response.StatusCode = 404;
-                string notFoundResponse = "<html><body><h1>404 - Not Found</h1></body></html>";
-                byte[] buffer = Encoding.UTF8.GetBytes(notFoundResponse);
-                response.ContentLength64 = buffer.Length;
-                await response.OutputStream.WriteAsync(buffer, 0, buffer.Length);
+                string errLog = $"404: Not Found. Checked paths:<br>" + string.Join("<br>", searchPaths);
+                byte[] errorBuffer = Encoding.UTF8.GetBytes(errLog);
+                response.ContentType = "text/html";
+                await response.OutputStream.WriteAsync(errorBuffer, 0, errorBuffer.Length);
             }
-
             response.OutputStream.Close();
         }
     }
