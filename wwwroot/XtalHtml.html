@@ -5,80 +5,85 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Xtal Player</title>
     <style>
-        body { font-family: Arial, sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; margin: 0; background: #000; color: #fff; }
-        #player-card { background: #1a1a1a; padding: 20px; border-radius: 15px; width: 320px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
-        .input-group { display: flex; gap: 5px; margin-bottom: 15px; }
-        input[type="text"] { flex: 1; padding: 10px; border-radius: 5px; border: none; background: #333; color: #fff; }
-        button { background: #4CAF50; border: none; color: white; padding: 10px; border-radius: 5px; cursor: pointer; font-weight: bold; }
-        #coverArt { width: 100%; height: 200px; object-fit: cover; border-radius: 10px; margin: 10px 0; background: #222; }
-        input[type="range"] { width: 100%; margin: 10px 0; }
-        #trackTitle { margin: 10px 0; font-weight: bold; font-size: 14px; color: #ccc; }
+        body { font-family: sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; margin: 0; background: #050505; color: white; }
+        #player { background: #111; padding: 25px; border-radius: 15px; width: 320px; text-align: center; box-shadow: 0 10px 40px rgba(0,0,0,0.8); border: 1px solid #222; }
+        .yt-box { display: flex; gap: 8px; margin-bottom: 20px; }
+        input[type="text"] { flex: 1; padding: 10px; border-radius: 6px; border: 1px solid #333; background: #1a1a1a; color: #fff; outline: none; }
+        button { background: #1db954; border: none; color: white; padding: 10px 15px; border-radius: 6px; cursor: pointer; font-weight: bold; }
+        button:hover { background: #1ed760; }
+        #cover { width: 100%; height: 200px; object-fit: cover; border-radius: 8px; margin: 15px 0; background: #222; }
+        input[type="range"] { width: 100%; margin: 10px 0; accent-color: #1db954; }
+        #title { font-size: 14px; margin-bottom: 10px; color: #aaa; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .time { font-size: 12px; color: #666; margin: 5px 0; }
     </style>
 </head>
 <body>
 
-    <div id="player-card">
-        <div class="input-group">
-            <input type="text" id="ytUrl" placeholder="Вставь ссылку на YouTube">
-            <button id="loadYtBtn">GO</button>
+    <div id="player">
+        <div class="yt-box">
+            <input type="text" id="ytUrl" placeholder="Вставь ссылку на YouTube...">
+            <button id="ytGo">GO</button>
         </div>
 
-        <input type="file" id="fileInput" accept="audio/*" style="font-size: 12px; margin-bottom: 10px;">
+        <input type="file" id="fileIn" accept="audio/*" style="font-size: 12px;">
         
-        <img id="coverArt" src="placeholder.jpg">
-        <div id="trackTitle">Xtal Player</div>
+        <img id="cover" src="placeholder.jpg">
+        <div id="title">Ready to play</div>
 
-        <audio id="mainAudio" crossorigin="anonymous"></audio>
+        <audio id="audio" crossorigin="anonymous"></audio>
 
-        <div style="display: flex; justify-content: space-between; font-size: 12px;">
-            <button id="playBtn" style="width: 70px;">Play</button>
-            <div id="time">00:00 / 00:00</div>
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <button id="playBtn" style="min-width: 80px;">Play</button>
+            <div class="time" id="timeDisplay">00:00 / 00:00</div>
         </div>
 
-        <input type="range" id="seekBar" value="0" step="0.1">
+        <input type="range" id="seek" value="0" step="0.1">
         
-        <label style="font-size: 13px;">Speed: <span id="spTxt">1.00</span>x
-            <input type="range" id="speedCtrl" min="0.5" max="2.0" step="0.05" value="1">
+        <label style="font-size: 13px; display: block; margin-top: 10px;">
+            Speed: <span id="spNum">1.00</span>x
+            <input type="range" id="speed" min="0.5" max="2.0" step="0.05" value="1">
         </label>
     </div>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jsmediatags/3.9.5/jsmediatags.min.js"></script>
     <script>
-        const audio = document.getElementById('mainAudio');
+        const audio = document.getElementById('audio');
         const playBtn = document.getElementById('playBtn');
-        const seekBar = document.getElementById('seekBar');
-        const speedCtrl = document.getElementById('speedCtrl');
-        const trackTitle = document.getElementById('trackTitle');
-        const ytBtn = document.getElementById('loadYtBtn');
+        const seek = document.getElementById('seek');
+        const speed = document.getElementById('speed');
+        const spNum = document.getElementById('spNum');
+        const ytGo = document.getElementById('ytGo');
+        const ytUrl = document.getElementById('ytUrl');
 
-        // Генерируем правильный путь к серверу
-        const getServerUrl = (path) => {
-            const host = window.location.origin.includes('file://') ? 'http://localhost:2025' : '';
-            return `${host}${path}`;
-        };
-
-        // Загрузка YouTube
-        ytBtn.onclick = () => {
-            const url = document.getElementById('ytUrl').value;
-            if(!url) return;
-            ytBtn.textContent = "...";
-            audio.src = getServerUrl(`/stream-yt?url=${encodeURIComponent(url)}`);
+        // YouTube Логика
+        ytGo.onclick = () => {
+            if(!ytUrl.value) return;
+            ytGo.textContent = "...";
+            
+            // Прямая установка src без лишних fetch запросов
+            const streamPath = `/stream-yt?url=${encodeURIComponent(ytUrl.value)}`;
+            
+            audio.pause();
+            audio.src = streamPath;
             audio.load();
+            
             audio.play().then(() => {
-                trackTitle.textContent = "YouTube Stream";
-                ytBtn.textContent = "GO";
-            }).catch(e => {
-                alert("Ошибка! Открой сайт через http://localhost:2025");
-                ytBtn.textContent = "GO";
+                document.getElementById('title').textContent = "YouTube Stream Active";
+                ytGo.textContent = "GO";
+            }).catch(err => {
+                console.error(err);
+                alert("Ошибка! Открой через http://localhost:2025");
+                ytGo.textContent = "GO";
             });
         };
 
-        // Локальный файл
-        document.getElementById('fileInput').onchange = (e) => {
+        // Файл Логика
+        document.getElementById('fileIn').onchange = (e) => {
             const file = e.target.files[0];
-            audio.src = URL.createObjectURL(file);
-            audio.play();
-            trackTitle.textContent = file.name;
+            if(file) {
+                audio.src = URL.createObjectURL(file);
+                audio.play();
+                document.getElementById('title').textContent = file.name;
+            }
         };
 
         // Управление
@@ -88,17 +93,17 @@
         
         audio.ontimeupdate = () => {
             if(!isNaN(audio.duration)) {
-                seekBar.max = audio.duration;
-                seekBar.value = audio.currentTime;
+                seek.max = audio.duration;
+                seek.value = audio.currentTime;
                 const fmt = (s) => new Date(s * 1000).toISOString().substr(14, 5);
-                document.getElementById('time').textContent = `${fmt(audio.currentTime)} / ${fmt(audio.duration)}`;
+                document.getElementById('timeDisplay').textContent = `${fmt(audio.currentTime)} / ${fmt(audio.duration)}`;
             }
         };
 
-        seekBar.oninput = () => audio.currentTime = seekBar.value;
-        speedCtrl.oninput = () => {
-            audio.playbackRate = speedCtrl.value;
-            document.getElementById('spTxt').textContent = parseFloat(speedCtrl.value).toFixed(2);
+        seek.oninput = () => audio.currentTime = seek.value;
+        speed.oninput = () => {
+            audio.playbackRate = speed.value;
+            spNum.textContent = parseFloat(speed.value).toFixed(2);
         };
     </script>
 </body>

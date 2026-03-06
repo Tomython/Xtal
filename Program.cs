@@ -11,11 +11,10 @@ class Program
     static async Task Main(string[] args)
     {
         HttpListener listener = new HttpListener();
-        // Порт 2025 как ты просил
         listener.Prefixes.Add("http://*:2025/"); 
         listener.Start();
-        Console.WriteLine("=== XTAL SERVER STARTED ===");
-        Console.WriteLine("Open: http://localhost:2025");
+        Console.WriteLine("=== XTAL SERVER IS LIVE ===");
+        Console.WriteLine("URL: http://localhost:2025");
 
         var youtube = new YoutubeClient();
 
@@ -25,20 +24,21 @@ class Program
             HttpListenerRequest request = context.Request;
             HttpListenerResponse response = context.Response;
 
-            // Разрешаем запросы со всех источников (фиксит CORS)
+            // Разрешаем CORS, чтобы браузер не блокировал аудио
             response.AppendHeader("Access-Control-Allow-Origin", "*");
             
             string requestedPath = request.Url.LocalPath.TrimStart('/');
 
-            // --- 1. СТРИМИНГ С YOUTUBE ---
+            // --- ОБРАБОТКА YOUTUBE (ПРОКСИ) ---
             if (requestedPath == "stream-yt")
             {
                 try
                 {
                     string videoUrl = request.QueryString["url"];
-                    if (string.IsNullOrEmpty(videoUrl)) throw new Exception("URL is empty");
+                    if (string.IsNullOrEmpty(videoUrl)) throw new Exception("URL empty");
                     
-                    // Очистка ссылки
+                    // Очистка ссылки от лишних параметров YouTube
+                    if (videoUrl.Contains("&")) videoUrl = videoUrl.Split('&')[0];
                     if (videoUrl.Contains("?si=")) videoUrl = videoUrl.Split("?si=")[0];
 
                     var streamManifest = await youtube.Videos.Streams.GetManifestAsync(videoUrl);
@@ -46,18 +46,20 @@ class Program
 
                     response.ContentType = "audio/mpeg";
                     using var ytStream = await youtube.Videos.Streams.GetAsync(streamInfo);
+                    
+                    // Копируем поток напрямую из YouTube в браузер
                     await ytStream.CopyToAsync(response.OutputStream);
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine($"[YT Error]: {ex.Message}");
+                    Console.WriteLine($"[!] Ошибка стриминга: {ex.Message}");
                     response.StatusCode = 500;
                 }
                 finally { response.OutputStream.Close(); }
                 continue;
             }
 
-            // --- 2. ПОИСК И РАЗДАЧА HTML ---
+            // --- РАЗДАЧА HTML-СТРАНИЦЫ ---
             if (string.IsNullOrEmpty(requestedPath) || requestedPath == "XtalHtml.html") 
                 requestedPath = "XtalHtml.html";
 
@@ -69,28 +71,21 @@ class Program
                 Path.Combine(Directory.GetCurrentDirectory(), requestedPath)
             };
 
-            string foundPath = null;
-            foreach (var path in searchPaths) {
-                if (File.Exists(path)) { foundPath = path; break; }
-            }
+            string finalPath = null;
+            foreach (var p in searchPaths) { if (File.Exists(p)) { finalPath = p; break; } }
 
-            if (foundPath != null)
+            if (finalPath != null)
             {
-                byte[] buffer = await File.ReadAllBytesAsync(foundPath);
-                if (foundPath.EndsWith(".html")) response.ContentType = "text/html; charset=utf-8";
-                else if (foundPath.EndsWith(".js")) response.ContentType = "application/javascript";
-                else if (foundPath.EndsWith(".css")) response.ContentType = "text/css";
-                
+                byte[] buffer = await File.ReadAllBytesAsync(finalPath);
+                response.ContentType = finalPath.EndsWith(".html") ? "text/html; charset=utf-8" : "application/octet-stream";
                 response.ContentLength64 = buffer.Length;
                 await response.OutputStream.WriteAsync(buffer, 0, buffer.Length);
             }
             else
             {
                 response.StatusCode = 404;
-                string errLog = $"404: Not Found. Checked paths:<br>" + string.Join("<br>", searchPaths);
-                byte[] errorBuffer = Encoding.UTF8.GetBytes(errLog);
-                response.ContentType = "text/html";
-                await response.OutputStream.WriteAsync(errorBuffer, 0, errorBuffer.Length);
+                byte[] error = Encoding.UTF8.GetBytes("404 - File Not Found");
+                await response.OutputStream.WriteAsync(error, 0, error.Length);
             }
             response.OutputStream.Close();
         }
