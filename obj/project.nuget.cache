@@ -1,8 +1,11 @@
 {
   "version": 2,
-  "dgSpecHash": "eDPKVTor+90=",
+  "dgSpecHash": "U1B2cKVRfKg=",
   "success": true,
-  "projectFilePath": "/Users/tomython/Documents/Visual Studio Code Project/XtalPlayer/XtalPlayer.csproj",
-  "expectedPackageFiles": [],
+  "projectFilePath": "/Users/tomython/Documents/Visual Studio Code Project/Xtal/XtalPlayer.csproj",
+  "expectedPackageFiles": [
+    "/Users/tomython/.nuget/packages/anglesharp/1.4.0/anglesharp.1.4.0.nupkg.sha512",
+    "/Users/tomython/.nuget/packages/youtubeexplode/6.5.7/youtubeexplode.6.5.7.nupkg.sha512"
+  ],
   "logs": []
 }

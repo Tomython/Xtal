@@ -3,13 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="keywords" content="test, site, music">
-    <meta name="description" content="Это сайт музыкальный плеер для замедления и ускорения музыки">
-    <!-- Стандартная иконка -->
+    <meta name="keywords" content="xtal, site, music, youtube">
+    <meta name="description" content="Музыкальный плеер для замедления и ускорения музыки">
+    
     <link rel="icon" href="/tarsicon.ico" type="image/x-icon">
     <link rel="shortcut icon" href="/tarsicon.ico" type="image/x-icon">
-
-    <!-- Для Apple устройств (добавь эти строки) -->
     <link rel="apple-touch-icon" href="/tarspng.png">
     <link rel="apple-touch-icon" sizes="180x180" href="/tarspng.png">
 
@@ -22,16 +20,15 @@
             align-items: center;
             justify-content: center;
             height: 100vh;
+            margin: 0;
             background: linear-gradient(180deg, #000000, #101010);
             color: white;
         }
         
-
         @keyframes gradientBorder {
             0% { background-position: 0% 50%; }
             50% { background-position: 100% 50%; }
             100% { background-position: 0% 50%; }
-            
         }
 
         @keyframes glowing {
@@ -41,17 +38,28 @@
         }
 
         #coverArt {
+            width: 200px;
+            height: 200px;
+            object-fit: cover;
+            border-radius: 10px;
+            display: block;
+            margin: 10px auto;
             border: 0px solid transparent;
             background: linear-gradient(45deg, rgb(40, 40, 40), rgb(154, 154, 154), rgb(165, 165, 165), rgb(32, 32, 32));
             background-size: 300% 300%;
             background-clip: padding-box;
-            animation: gradientBorder 3s infinite alternate;
-            animation: glowing 2s infinite alternate;
+            animation: gradientBorder 3s infinite alternate, glowing 2s infinite alternate;
         }
 
         #trackTitle {
             font-family: Helvetica, sans-serif;
-            color: linear-gradient(180deg, gray, white);
+            color: lightgray;
+            margin-bottom: 15px;
+            text-align: center;
+            max-width: 300px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
         #player-container {
@@ -60,7 +68,10 @@
             border-radius: 10px;
             box-shadow: 0px 0px 10px rgba(255, 255, 255, 0.6);
             text-align: center;
+            width: 300px;
+            color: black;
         }
+
         button {
             background: #4CAF50;
             border: none;
@@ -69,38 +80,56 @@
             margin: 10px;
             cursor: pointer;
             border-radius: 5px;
+            font-weight: bold;
+            transition: background 0.2s;
         }
-        button:hover {
-            background: #45a049;
-        }
-        input[type="range"] {
+        button:hover { background: #45a049; }
+        button:disabled { background: #888; cursor: not-allowed; }
+
+        input[type="range"] { width: 100%; margin: 10px 0; }
+        
+        .yt-box {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
             width: 100%;
+            justify-content: center;
         }
-        #coverArt {
-            width: 200px;
-            height: 200px;
-            object-fit: cover;
-            border-radius: 10px;
-            display: block;
-            margin: 10px auto;
+        #ytUrl {
+            flex-grow: 1;
+            padding: 8px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
         }
     </style>
 </head>
 <body>
-    <!-- <img width="240px 120px" src="xtalgif.gif" alt="Logo"> -->
-    <video autoplay loop muted width="240px 120px">
+
+    <video autoplay loop muted width="240" height="120" style="margin-bottom: 15px; border-radius: 10px;">
         <source src="blackxtalvideo.mp4" type="video/mp4">
-      </video>
+    </video>
       
-    <input type="file" id="audioFileInput" accept="audio/*">
+    <audio id="core-audio" crossorigin="anonymous"></audio>
+
+    <div class="yt-box" style="width: 340px;">
+        <input type="text" id="ytUrl" placeholder="Ссылка на YouTube">
+        <button id="loadYtBtn" style="margin:0;">Стримить</button>
+    </div>
+
+    <input type="file" id="audioFileInput" accept="audio/*" style="margin-bottom: 15px;">
+    
     <img id="coverArt" src="placeholder.jpg" alt="Обложка">
-    <div id="trackTitle" style="font-family: Arial, Helvetica, sans-serif; color: linear-gradient(180deg, gray, white)"><b>Track</b></div>
+    <div id="trackTitle"><b>Track</b></div>
+    
     <div id="player-container">
         <button id="playPause">Play</button>
-        <input type="range" id="seekBar" min="0" max="100" value="0">
+        <input type="range" id="seekBar" min="0" max="100" value="0" step="0.1">
         <div id="timeDisplay">00:00 / 00:00</div>
-        <label>Speed: <input type="range" id="speedControl" min="0.5" max="1.5" step="0.01" value="1"></label>
+        <label style="display:block; margin-top: 10px;">Speed: <span id="speedValue">1.00</span>x<br>
+            <input type="range" id="speedControl" min="0.5" max="2.0" step="0.05" value="1">
+        </label>
     </div>
+
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jsmediatags/3.9.5/jsmediatags.min.js"></script>
     <script>
         const audioFileInput = document.getElementById('audioFileInput');
@@ -108,30 +137,41 @@
         const seekBar = document.getElementById('seekBar');
         const timeDisplay = document.getElementById('timeDisplay');
         const speedControl = document.getElementById('speedControl');
+        const speedValue = document.getElementById('speedValue');
         const coverArt = document.getElementById('coverArt');
         const trackTitle = document.getElementById('trackTitle');
+        const ytUrl = document.getElementById('ytUrl');
+        const loadYtBtn = document.getElementById('loadYtBtn');
+        const coreAudio = document.getElementById('core-audio');
         
-        let audioContext = new (window.AudioContext || window.webkitAudioContext)();
-        let sourceNode = null;
-        let audioBuffer = null;
-        let isPlaying = false;
-        let startTime = 0;
-        let pauseOffset = 0;
-        let duration = 0;
+        let audioContext;
+        let mediaSource = null;
 
-        audioFileInput.addEventListener('change', async function(event) {
+        // Инициализация Web Audio API по первому клику (требование браузеров)
+        function initAudioContext() {
+            if (!audioContext) {
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                mediaSource = audioContext.createMediaElementSource(coreAudio);
+                mediaSource.connect(audioContext.destination);
+            }
+            if (audioContext.state === 'suspended') audioContext.resume();
+        }
+
+        // --- ЛОКАЛЬНЫЙ ФАЙЛ ---
+        audioFileInput.addEventListener('change', function(event) {
             const file = event.target.files[0];
             if (!file) return;
             
-            const arrayBuffer = await file.arrayBuffer();
-            audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
-            duration = audioBuffer.duration;
-            seekBar.max = duration;
-            updateTimer(0);
+            initAudioContext();
+            
+            // Мгновенная ссылка на локальный файл вместо долгого decodeAudioData
+            coreAudio.src = URL.createObjectURL(file);
+            coreAudio.playbackRate = speedControl.value;
+            coreAudio.play();
             
             jsmediatags.read(file, {
                 onSuccess: function (tag) {
-                    trackTitle.textContent = tag.tags.title || file.name;
+                    trackTitle.innerHTML = `<b>${tag.tags.title || file.name}</b>`;
                     if (tag.tags.picture) {
                         let { data, format } = tag.tags.picture;
                         let blob = new Blob([new Uint8Array(data)], { type: format });
@@ -141,79 +181,84 @@
                     }
                 },
                 onError: function () {
-                    trackTitle.textContent = file.name;
+                    trackTitle.innerHTML = `<b>${file.name}</b>`;
                     coverArt.src = "placeholder.jpg";
                 }
             });
         });
 
-        function playAudio() {
-            if (sourceNode) {
-                sourceNode.stop();
-            }
-            sourceNode = audioContext.createBufferSource();
-            sourceNode.buffer = audioBuffer;
-            sourceNode.playbackRate.value = speedControl.value;
-            
-            const gainNode = audioContext.createGain();
-            sourceNode.connect(gainNode).connect(audioContext.destination);
-            
-            sourceNode.start(0, pauseOffset);
-            startTime = audioContext.currentTime - pauseOffset;
-            isPlaying = true;
-            playPauseButton.textContent = 'Pause';
-            requestAnimationFrame(updateSeekBar);
-        }
+        // --- YOUTUBE СТРИМИНГ ---
+        loadYtBtn.addEventListener('click', async () => {
+            const url = ytUrl.value;
+            if (!url) return;
 
-        function pauseAudio() {
-            if (sourceNode) {
-                sourceNode.stop();
-                pauseOffset = audioContext.currentTime - startTime;
-                isPlaying = false;
-                playPauseButton.textContent = 'Play';
-            }
-        }
+            initAudioContext();
+            loadYtBtn.textContent = 'Ищем...';
+            loadYtBtn.disabled = true;
 
-        playPauseButton.addEventListener('click', function() {
-            if (isPlaying) {
-                pauseAudio();
-            } else {
-                playAudio();
-            }
-        });
+            try {
+                const res = await fetch(`/get-yt?url=${encodeURIComponent(url)}`);
+                const data = await res.json();
 
-        function updateSeekBar() {
-            if (isPlaying) {
-                const currentTime = audioContext.currentTime - startTime;
-                seekBar.value = currentTime;
-                updateTimer(currentTime);
-                requestAnimationFrame(updateSeekBar);
-            }
-        }
-
-        function updateTimer(time) {
-            const minutes = Math.floor(time / 60);
-            const seconds = Math.floor(time % 60);
-            const totalMinutes = Math.floor(duration / 60);
-            const totalSeconds = Math.floor(duration % 60);
-            timeDisplay.textContent = `${minutes}:${seconds.toString().padStart(2, '0')} / ${totalMinutes}:${totalSeconds.toString().padStart(2, '0')}`;
-        }
-
-        seekBar.addEventListener('input', function() {
-            if (sourceNode) {
-                pauseOffset = parseFloat(seekBar.value);
-                if (isPlaying) {
-                    playAudio();
+                if (data.url) {
+                    coreAudio.src = data.url;
+                    coreAudio.playbackRate = speedControl.value;
+                    coreAudio.play();
+                    
+                    trackTitle.innerHTML = "<b>YouTube Track</b>";
+                    coverArt.src = "placeholder.jpg";
+                    ytUrl.value = ""; // Очищаем поле
                 }
-                updateTimer(pauseOffset);
+            } catch (err) {
+                alert("Ошибка загрузки. Проверьте ссылку.");
+                console.error(err);
+            } finally {
+                loadYtBtn.textContent = 'Стримить';
+                loadYtBtn.disabled = false;
             }
         });
 
-        speedControl.addEventListener('input', function() {
-            if (sourceNode) {
-                sourceNode.playbackRate.value = speedControl.value;
+        // --- УПРАВЛЕНИЕ ПЛЕЕРОМ ---
+        playPauseButton.addEventListener('click', function() {
+            initAudioContext();
+            if (coreAudio.paused) {
+                coreAudio.play();
+            } else {
+                coreAudio.pause();
             }
         });
+
+        coreAudio.addEventListener('play', () => playPauseButton.textContent = 'Pause');
+        coreAudio.addEventListener('pause', () => playPauseButton.textContent = 'Play');
+
+        // Обновление ползунка и времени
+        coreAudio.addEventListener('timeupdate', () => {
+            if (isNaN(coreAudio.duration)) return;
+            seekBar.max = coreAudio.duration;
+            seekBar.value = coreAudio.currentTime;
+            updateTimer(coreAudio.currentTime, coreAudio.duration);
+        });
+
+        // Перемотка
+        seekBar.addEventListener('input', () => {
+            coreAudio.currentTime = seekBar.value;
+        });
+
+        // Скорость
+        speedControl.addEventListener('input', () => {
+            const speed = parseFloat(speedControl.value);
+            coreAudio.playbackRate = speed;
+            speedValue.textContent = speed.toFixed(2);
+        });
+
+        function updateTimer(current, total) {
+            const format = (t) => {
+                let m = Math.floor(t / 60);
+                let s = Math.floor(t % 60);
+                return `${m}:${s.toString().padStart(2, '0')}`;
+            };
+            timeDisplay.textContent = `${format(current)} / ${format(total)}`;
+        }
     </script>
 </body>
 </html>

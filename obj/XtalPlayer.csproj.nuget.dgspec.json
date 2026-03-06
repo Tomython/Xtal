@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "/Users/tomython/Documents/Visual Studio Code Project/XtalPlayer/XtalPlayer.csproj": {}
+    "/Users/tomython/Documents/Visual Studio Code Project/Xtal/XtalPlayer.csproj": {}
   },
   "projects": {
-    "/Users/tomython/Documents/Visual Studio Code Project/XtalPlayer/XtalPlayer.csproj": {
+    "/Users/tomython/Documents/Visual Studio Code Project/Xtal/XtalPlayer.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "/Users/tomython/Documents/Visual Studio Code Project/XtalPlayer/XtalPlayer.csproj",
+        "projectUniqueName": "/Users/tomython/Documents/Visual Studio Code Project/Xtal/XtalPlayer.csproj",
         "projectName": "XtalPlayer",
-        "projectPath": "/Users/tomython/Documents/Visual Studio Code Project/XtalPlayer/XtalPlayer.csproj",
+        "projectPath": "/Users/tomython/Documents/Visual Studio Code Project/Xtal/XtalPlayer.csproj",
         "packagesPath": "/Users/tomython/.nuget/packages/",
-        "outputPath": "/Users/tomython/Documents/Visual Studio Code Project/XtalPlayer/obj/",
+        "outputPath": "/Users/tomython/Documents/Visual Studio Code Project/Xtal/obj/",
         "projectStyle": "PackageReference",
         "configFilePaths": [
           "/Users/tomython/.nuget/NuGet/NuGet.Config"
@@ -42,6 +42,12 @@
       "frameworks": {
         "net8.0": {
           "targetAlias": "net8.0",
+          "dependencies": {
+            "YoutubeExplode": {
+              "target": "Package",
+              "version": "[6.5.7, )"
+            }
+          },
           "imports": [
             "net461",
             "net462",
